@@ -1,7 +1,7 @@
-﻿using FundooNotes.API.BusinessLayer;
+﻿using BusinessLayer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using FundooNotes.API.ModelLayer.DTOs;
+using ModelLayer.DTOs;
 
 namespace FundooNotes.API.Controllers
 {

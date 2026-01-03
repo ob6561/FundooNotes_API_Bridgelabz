@@ -1,12 +1,12 @@
-using FundooNotes.API.Data;
-using FundooNotes.API.BusinessLayer;
-using FundooNotes.API.DataBaseLayer;
-using Microsoft.EntityFrameworkCore;
+﻿using BusinessLayer;
+using DataLayer.Context;
+using DataLayer.Repositories.Interfaces;
+using DataLayer.Repositories.Implementations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-
 
 namespace FundooNotes.API
 {
@@ -16,10 +16,10 @@ namespace FundooNotes.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            
+            // Controllers
             builder.Services.AddControllers();
 
-            
+            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -30,7 +30,7 @@ namespace FundooNotes.API
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Enter JWT token as: Bearer {your token}"
+                    Description = "Enter JWT token"
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -44,26 +44,29 @@ namespace FundooNotes.API
                                 Id = "Bearer"
                             }
                         },
-                        new string[] {}
+                        Array.Empty<string>()
                     }
                 });
             });
 
-            
+            // DbContext
             builder.Services.AddDbContext<FundooContext>(options =>
                 options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")
+                    builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("DataLayer")
                 )
             );
 
             
-            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<INoteRepository, NoteRepository>();
+
+
+
+            // Services
             builder.Services.AddScoped<UserService>();
-            builder.Services.AddScoped<NoteRepository>();
-            builder.Services.AddScoped<NoteService>();
+            
 
-
-
+            // Authentication
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -81,14 +84,13 @@ namespace FundooNotes.API
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
                     )
                 };
             });
 
             var app = builder.Build();
 
-            
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -97,7 +99,7 @@ namespace FundooNotes.API
 
             app.UseHttpsRedirection();
 
-            app.UseAuthentication(); 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

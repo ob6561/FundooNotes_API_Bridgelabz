@@ -1,5 +1,5 @@
-﻿using FundooNotes.API.BusinessLayer;
-using FundooNotes.API.ModelLayer.DTOs;
+﻿using BusinessLayer;
+using ModelLayer.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
